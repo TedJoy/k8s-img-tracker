@@ -1,0 +1,15 @@
+{
+  "devDependencies": {
+    "@eslint/create-config": "*",
+    "eslint": "*",
+    "gulp": "*",
+    "gulp-plumber": "*",
+    "ts-node": "*",
+    "tsconfig-paths": "*",
+    "typescript": "*",
+    "@types/gulp": "*",
+    "@types/node": "*",
+    "shelljs": "*",
+    "@types/shelljs": "*"
+  }
+}

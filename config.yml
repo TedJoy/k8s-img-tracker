@@ -1,0 +1,12 @@
+app_key: img-tracker
+
+event_broker:
+  type: kafka
+  connect_url: kafka.dev.gambaru.io:9092
+
+registries:
+  443533367748.dkr.ecr.ap-southeast-1.amazonaws.com:
+    type: AWS
+    metadata:
+      aws_access_key_id: AKIAWORFGDHCIOHDJRNS
+      aws_secret_access_key: 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
