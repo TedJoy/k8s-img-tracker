@@ -59,6 +59,8 @@ func ReconcileKnativeService(clientSet dynamic.Interface, d time.Duration, wg sy
 }
 
 func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
+	imageHashMap := make(map[string]string)
+
 	objs, err := clientSet.Resource(knativeServiceResource).List(context.TODO(), metav1.ListOptions{LabelSelector: config.MyFileConfig.AppKey + "/knative-service=true"})
 	if err != nil {
 		if err.Error() == "the server could not find the requested resource" {
@@ -76,7 +78,7 @@ func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 		for k, v := range *itemConfig {
 			splits1 := strings.Split(k, "/")
 			splits2 := strings.Split(v, ":")
-			upToDateHash := GetImgDigest(v)
+			upToDateHash := GetImgDigest(v, imageHashMap)
 			upToDateImageHash := splits2[0] + "@" + upToDateHash
 
 			currentImageHash, err := GetCurrentImageHashKnative(item, splits1[0], splits1[1])

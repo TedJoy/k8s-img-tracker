@@ -71,7 +71,11 @@ func loginECR(registry, key, secret, region string) error {
 	return nil
 }
 
-func GetImgDigest(image string) string {
+func GetImgDigest(image string, hm map[string]string) string {
+	if val, ok := hm[image]; ok {
+		return val
+	}
+
 	hash, err := tryGetHash(image)
 
 	if err != nil {
@@ -104,6 +108,8 @@ func GetImgDigest(image string) string {
 			logger.Logger.Panicw("Error", "err object", err)
 		}
 	}
+
+	hm[image] = hash
 
 	return hash
 }

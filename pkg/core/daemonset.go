@@ -54,6 +54,7 @@ func ReconcileDaemonSet(clientSet kubernetes.Interface, d time.Duration, wg sync
 }
 
 func ReconcileDaemonSetRun(clientSet kubernetes.Interface) {
+	imageHashMap := make(map[string]string)
 	objs, err := clientSet.AppsV1().DaemonSets("").List(context.TODO(), metav1.ListOptions{LabelSelector: config.MyFileConfig.AppKey + "/daemonset=true"})
 	if err != nil {
 		panic(err.Error())
@@ -66,8 +67,9 @@ func ReconcileDaemonSetRun(clientSet kubernetes.Interface) {
 		for k, v := range *itemConfig {
 			splits1 := strings.Split(k, "/")
 			splits2 := strings.Split(v, ":")
-			upToDateHash := GetImgDigest(v)
+			upToDateHash := GetImgDigest(v, imageHashMap)
 			upToDateImageHash := splits2[0] + "@" + upToDateHash
+
 			currentImageHash := GetCurrentImageHash(item.Spec.Template.Spec, splits1[0], splits1[1])
 
 			// logger.Logger.Infof("type: %s, name: %s, image: %s, image@hash: %s, current image@hash: %s", splits1[0], splits1[1], v, upToDateImageHash, currentImageHash)
