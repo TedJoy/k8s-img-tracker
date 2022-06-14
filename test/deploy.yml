@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-1
+  labels:
+    img-tracker/deployment: "true"
+  annotations:
+    img-tracker/config: >
+      {
+        "containers/i1": "443533367748.dkr.ecr.ap-southeast-1.amazonaws.com/img-tracker/img-1:test-1"
+      }
+spec:
+  selector:
+    matchLabels:
+      app: deploy-1
+  template:
+    metadata:
+      labels:
+        app: deploy-1
+    spec:
+      containers:
+      - name: i1
+        image: 443533367748.dkr.ecr.ap-southeast-1.amazonaws.com/img-tracker/img-1:test-1
+        command:
+          - sh
+          - -c
+          - |
+            cat /img-tag
+            sleep inf
+      imagePullSecrets:
+        - name: regcred

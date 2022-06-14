@@ -1,0 +1,3 @@
+FROM alpine
+
+RUN echo "img-1-0" > /img-tag

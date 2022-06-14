@@ -1,0 +1,25 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sample-svc
+  labels:
+    img-tracker/knative-service: "true"
+  annotations:
+    img-tracker/config: >
+      {
+        "containers/i1": "443533367748.dkr.ecr.ap-southeast-1.amazonaws.com/img-tracker/img-1:test-1"
+      }
+spec:
+  template:
+    spec:
+      containers:
+      - image:  443533367748.dkr.ecr.ap-southeast-1.amazonaws.com/img-tracker/img-1:test-1
+        name: i1
+        command:
+          - sh
+          - -c
+          - |
+            cat /img-tag
+            sleep inf
+      imagePullSecrets:
+        - name: regcred

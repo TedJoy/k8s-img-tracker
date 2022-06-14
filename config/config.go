@@ -1,10 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/caarlos0/env"
-	"gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -24,7 +24,7 @@ func readConfigFile(filepath string) {
 	defer f.Close()
 
 	MyFileConfig = &FileConfig{}
-	decoder := yaml.NewDecoder(f)
+	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&MyFileConfig)
 	if err != nil {
 		panic(err)

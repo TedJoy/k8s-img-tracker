@@ -1,6 +1,8 @@
 package core
 
 import (
+	"bytes"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -8,24 +10,100 @@ import (
 	"git2.gnt-global.com/jlab/gdeploy/img-tracker/pkg/logger"
 )
 
-func GetImgDigestPrivate(user, password, registry, image string) string {
-	loginPrivateRegistry(user, password, registry)
-	return GetImgDigestPublic(image)
-}
+// func GetImgDigestPrivate(user, password, registry, image string) string {
+// 	loginPrivateRegistry(user, password, registry)
+// 	return GetImgDigestPublic(image)
+// }
 
 func loginPrivateRegistry(user, password, registry string) {
-	if strings.HasSuffix(registry, "amazonaws.com") {
-	}
 }
 
-func GetImgDigestPublic(image string) string {
-	out, err := exec.Command("skopeo", "inspect", "docker://"+image, "-f={{.Digest}}").Output()
+func (e SkopeoUnauthorizedError) Error() string {
+	return "Unauthorized, need login"
+}
 
-	lg := logger.New("main", config.MyEnvConfig.Debug)
-
+func tryGetHash(image string) (string, error) {
+	cmd := exec.Command("skopeo", "inspect", "docker://"+image, "-f={{.Digest}}")
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err := cmd.Run()
 	if err != nil {
-		lg.SugaredLogger.Panicf("error: %v", err)
+		if strings.Contains(errb.String(), "unauthorized: authentication required") {
+			logger.Logger.Debug(err)
+			return "", SkopeoUnauthorizedError{}
+		}
+		logger.Logger.Panicf("error: %v", err)
+		return "", err
 	}
 
-	return strings.TrimSpace(string(out))
+	return strings.TrimSpace(outb.String()), nil
+}
+
+func getECRLoginPassword(key, secret, region string) (string, error) {
+	cmd := exec.Command("aws", "ecr", "get-login-password")
+	cmd.Env = append(os.Environ(), "AWS_ACCESS_KEY_ID="+key, "AWS_SECRET_ACCESS_KEY="+secret, "AWS_DEFAULT_REGION="+region)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return outb.String(), nil
+}
+
+func loginECR(registry, key, secret, region string) error {
+	password, err := getECRLoginPassword(key, secret, region)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("skopeo", "login", registry, "--username=AWS", "--password="+password)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetImgDigest(image string) string {
+	hash, err := tryGetHash(image)
+
+	if err != nil {
+		logger.Logger.Debugf("%T", err)
+		switch err.(type) {
+		case SkopeoUnauthorizedError:
+			for k, v := range config.MyFileConfig.Registries {
+				if strings.HasPrefix(image, k) {
+					logger.Logger.Debug(v.Type)
+					switch v.Type {
+					case "ECR":
+						err = loginECR(k, v.Metadata["aws_access_key_id"], v.Metadata["aws_secret_access_key"], v.Metadata["aws_default_region"])
+
+						if err != nil {
+							logger.Logger.Panicw("Error when authenticating to ECR", "err object", err)
+						}
+
+						hash, err = tryGetHash(image)
+
+						if err != nil {
+							logger.Logger.Panicw("Error even after authenticated", "err object", err)
+						}
+					default:
+						logger.Logger.Panicw("Unsupported registry type", "type", v.Type)
+					}
+					break
+				}
+			}
+		default:
+			logger.Logger.Panicw("Error", "err object", err)
+		}
+	}
+
+	return hash
 }

@@ -6,7 +6,6 @@ import (
 
 	"git2.gnt-global.com/jlab/gdeploy/img-tracker/config"
 	"git2.gnt-global.com/jlab/gdeploy/img-tracker/pkg/k8s"
-	"git2.gnt-global.com/jlab/gdeploy/img-tracker/pkg/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -21,8 +20,8 @@ func main() {
 
 	// patch image at location to new sha
 	// fmt.Print(core.GetImgDigestPublic("443533367748.dkr.ecr.ap-southeast-1.amazonaws.com/ai/graph-matching"))
-	lg := logger.New("main", config.MyEnvConfig.Debug)
-	lg.SugaredLogger.Infof("%v", config.MyEnvConfig.UseKubeCfg)
+	// lg := logger.New("main", config.MyEnvConfig.Debug)
+	// lg.SugaredLogger.Infof("%v", config.MyEnvConfig.UseKubeCfg)
 	clientSet := k8s.GetClientSet()
 	pods, err := clientSet.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{LabelSelector: config.MyFileConfig.AppKey + "=enabled"})
 	if err != nil {

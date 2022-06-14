@@ -6,11 +6,11 @@ import (
 )
 
 // Logger is a log structure which exposes Uber/ZAP library
-type Logger struct{ *zap.SugaredLogger }
+var Logger *zap.SugaredLogger
 
 // New instantiate new logging function by using ubers zap library
 // for the development environments
-func New(name string, debug bool) *Logger {
+func New(name string, debug bool) *zap.SugaredLogger {
 
 	logger, _ := newDevelopmentLogger()
 
@@ -22,7 +22,7 @@ func New(name string, debug bool) *Logger {
 
 	defer logger.Sync()
 
-	return &Logger{logger.Sugar()}
+	return logger.Sugar()
 }
 
 // newDevelopmentLogger will setup a new Development Logger
