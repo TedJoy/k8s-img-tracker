@@ -45,6 +45,12 @@ import (
 // 	<-stopper
 // }
 
+var knativeServiceResource = schema.GroupVersionResource{
+	Group:    "serving.knative.dev",
+	Version:  "v1",
+	Resource: "services",
+}
+
 func ReconcileKnativeService(clientSet dynamic.Interface, d time.Duration, wg sync.WaitGroup) {
 	defer wg.Done()
 	for range time.Tick(d) {
@@ -52,25 +58,17 @@ func ReconcileKnativeService(clientSet dynamic.Interface, d time.Duration, wg sy
 	}
 }
 
-var knativeServiceResource = schema.GroupVersionResource{
-	Group:    "serving.knative.dev",
-	Version:  "v1",
-	Resource: "services",
-}
-
 func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 	objs, err := clientSet.Resource(knativeServiceResource).List(context.TODO(), metav1.ListOptions{LabelSelector: config.MyFileConfig.AppKey + "/knative-service=true"})
 	if err != nil {
-		logger.Logger.Debug(err)
-		return
+		if err.Error() == "the server could not find the requested resource" {
+			return
+		} else {
+			logger.Logger.Panic(err)
+		}
 	}
 
 	for _, item := range objs.Items {
-		// itemJson, err := item.MarshalJSON()
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// logger.Logger.Info(string(itemJson))
 		itemConfigRaw := item.GetAnnotations()[config.MyFileConfig.AppKey+"/config"]
 		itemConfig := &map[string]string{}
 		json.Unmarshal([]byte(itemConfigRaw), &itemConfig)
@@ -81,28 +79,12 @@ func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 			upToDateHash := GetImgDigest(v)
 			upToDateImageHash := splits2[0] + "@" + upToDateHash
 
-			// podSpecRaw, found, err := unstructured.NestedFieldNoCopy(item.UnstructuredContent(), "spec", "template", "spec")
-			// logger.Logger.Debug(podSpecRaw)
-			// if err != nil {
-			// 	logger.Logger.Panic(err)
-			// }
-
-			// if !found {
-			// 	continue
-			// }
-
-			// podSpec, ok := podSpecRaw.(v1.PodSpec)
-			// if !ok {
-			// 	logger.Logger.Panic(err)
-			// }
-			// logger.Logger.Info(podSpec)
-
 			currentImageHash, err := GetCurrentImageHashKnative(item, splits1[0], splits1[1])
 			if err != nil {
 				logger.Logger.Panic(err)
 			}
 
-			// logger.Logger.Infof("CurrentImageHashKnative: %s", currentImageHash)
+			logger.Logger.Debugf("CurrentImageHashKnative: %s", currentImageHash)
 
 			logger.Logger.Debugf("type: %s, name: %s, image: %s, image@hash: %s, current image@hash: %s", splits1[0], splits1[1], v, upToDateImageHash, currentImageHash)
 
@@ -128,7 +110,7 @@ func GetCurrentImageHashKnative(item unstructured.Unstructured, containerType, c
 		logger.Logger.Debug(err)
 	}
 
-	// logger.Logger.Infof("Containers: %s, ContainerName: %s", containers, containerName)
+	logger.Logger.Debugf("Containers: %s, ContainerName: %s", containers, containerName)
 
 	if !found {
 		return "", nil
@@ -150,7 +132,7 @@ func CreatePatchOpKnative(item unstructured.Unstructured, containerType, contain
 		logger.Logger.Debug(err)
 	}
 
-	// logger.Logger.Infof("Containers: %s, ContainerName: %s", containers, containerName)
+	logger.Logger.Debugf("Containers: %s, ContainerName: %s", containers, containerName)
 
 	if !found {
 		return PatchOperation{}

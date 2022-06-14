@@ -8,7 +8,7 @@ type EventBroker int8
 type EnvConfig struct {
 	ConfigFile     string `env:"CONFIG_FILE"      envDefault:"./config.json"`
 	Debug          bool   `env:"DEBUG"            envDefault:"false"`
-	UseKubeCfg     bool   `env:"USE_KUBECONFIG"   envDefault:"true"`
+	UseKubeCfg     bool   `env:"USE_KUBECONFIG"   envDefault:"false"`
 	KubeConfigFile string `env:"KUBECONFIG"       envDefault:"${HOME}/.kube/config" envExpand:"true"`
 }
 

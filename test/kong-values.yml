@@ -1,0 +1,25 @@
+# image:
+#   repository: kong
+#   tag: "2.8"
+
+proxy:
+  # Enable creating a Kubernetes service for the proxy
+  enabled: true
+  type: ClusterIP
+  # http:
+  #   nodePort: 30080
+  tls:
+    # Enable HTTPS listen for the proxy
+    enabled: false
+
+admin:
+  enabled: false
+  type: ClusterIP
+  http:
+    enabled: true
+  tls:
+    enabled: false
+  ingress:
+    enabled: true
+    ingressClassName: kong
+    hostname: test7.gambaru.io

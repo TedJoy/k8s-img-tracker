@@ -1,9 +1,8 @@
 package k8s
 
 import (
-	"fmt"
-
 	appcfg "git2.gnt-global.com/jlab/gdeploy/img-tracker/config"
+	"git2.gnt-global.com/jlab/gdeploy/img-tracker/pkg/logger"
 
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -28,7 +27,7 @@ func GetClientSet() *kubernetes.Clientset {
 	} else {
 		kubeconfig := appcfg.MyEnvConfig.KubeConfigFile
 
-		fmt.Println("kubeconfig: " + kubeconfig)
+		logger.Logger.Debug("kubeconfig: " + kubeconfig)
 
 		c, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
@@ -39,7 +38,7 @@ func GetClientSet() *kubernetes.Clientset {
 		if err != nil {
 			panic(err.Error())
 		}
-		fmt.Println("kubecontext: " + kct)
+		logger.Logger.Debug("kubecontext: " + kct)
 	}
 
 	cs, err := kubernetes.NewForConfig(config)
@@ -61,7 +60,7 @@ func GetDynamic() dynamic.Interface {
 	} else {
 		kubeconfig := appcfg.MyEnvConfig.KubeConfigFile
 
-		fmt.Println("kubeconfig: " + kubeconfig)
+		logger.Logger.Debug("kubeconfig: " + kubeconfig)
 
 		c, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
@@ -72,7 +71,7 @@ func GetDynamic() dynamic.Interface {
 		if err != nil {
 			panic(err.Error())
 		}
-		fmt.Println("kubecontext: " + kct)
+		logger.Logger.Debug("kubecontext: " + kct)
 	}
 
 	cs, err := dynamic.NewForConfig(config)
