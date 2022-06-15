@@ -60,8 +60,8 @@ func ReconcileDeploymentRun(clientSet kubernetes.Interface) {
 	if err != nil {
 		panic(err.Error())
 	}
-
 	for _, item := range objs.Items {
+		// TODO: no                                   need to patch when containers/name does not exist
 		itemConfigRaw := item.Annotations[config.MyFileConfig.AppKey+"/config"]
 		itemConfig := &map[string]string{}
 		json.Unmarshal([]byte(itemConfigRaw), &itemConfig)

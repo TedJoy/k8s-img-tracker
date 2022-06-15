@@ -62,6 +62,8 @@ func ReconcileStatefulSetRun(clientSet kubernetes.Interface) {
 	}
 
 	for _, item := range objs.Items {
+		// TODO: no                                   need to patch when containers/name does not exist
+
 		itemConfigRaw := item.Annotations[config.MyFileConfig.AppKey+"/config"]
 		itemConfig := &map[string]string{}
 		json.Unmarshal([]byte(itemConfigRaw), &itemConfig)
