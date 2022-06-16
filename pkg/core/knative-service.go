@@ -66,7 +66,7 @@ func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 		if err.Error() == "the server could not find the requested resource" {
 			return
 		} else {
-			logger.Logger.Panic(err)
+			logger.Logger.Info(err)
 		}
 	}
 
@@ -79,14 +79,18 @@ func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 
 		for k, v := range *itemConfig {
 			splits1 := strings.Split(k, "/")
+			currentImageHash, err := GetCurrentImageHashKnative(item, splits1[0], splits1[1])
+
+			if err != nil {
+				logger.Logger.Info(err)
+			}
+
+			if currentImageHash == "" {
+				continue
+			}
 			splits2 := strings.Split(v, ":")
 			upToDateHash := GetImgDigest(v, imageHashMap)
 			upToDateImageHash := splits2[0] + "@" + upToDateHash
-
-			currentImageHash, err := GetCurrentImageHashKnative(item, splits1[0], splits1[1])
-			if err != nil {
-				logger.Logger.Panic(err)
-			}
 
 			logger.Logger.Debugf("CurrentImageHashKnative: %s", currentImageHash)
 
@@ -97,11 +101,11 @@ func ReconcileKnativeServiceRun(clientSet dynamic.Interface) {
 				logger.Logger.Debug(patchOp)
 				patchOpBytes, err := json.Marshal([]PatchOperation{patchOp})
 				if err != nil {
-					logger.Logger.Panicw("error masharling patch op", "patchOp", patchOp, "patchOp", patchOp, "err", err)
+					logger.Logger.Infow("error masharling patch op", "patchOp", patchOp, "patchOp", patchOp, "err", err)
 				}
 				_, err = clientSet.Resource(knativeServiceResource).Namespace(item.GetNamespace()).Patch(context.TODO(), item.GetName(), types.JSONPatchType, patchOpBytes, metav1.PatchOptions{})
 				if err != nil {
-					logger.Logger.Panicw("error patching", "patchOp", patchOp, "err", err)
+					logger.Logger.Infow("error patching", "patchOp", patchOp, "err", err)
 				}
 			}
 		}

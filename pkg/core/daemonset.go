@@ -61,18 +61,20 @@ func ReconcileDaemonSetRun(clientSet kubernetes.Interface) {
 	}
 
 	for _, item := range objs.Items {
-		// TODO: no                                   need to patch when containers/name does not exist
-
 		itemConfigRaw := item.Annotations[config.MyFileConfig.AppKey+"/config"]
 		itemConfig := &map[string]string{}
 		json.Unmarshal([]byte(itemConfigRaw), &itemConfig)
 		for k, v := range *itemConfig {
 			splits1 := strings.Split(k, "/")
+			currentImageHash := GetCurrentImageHash(item.Spec.Template.Spec, splits1[0], splits1[1])
+
+			if currentImageHash == "" {
+				continue
+			}
+
 			splits2 := strings.Split(v, ":")
 			upToDateHash := GetImgDigest(v, imageHashMap)
 			upToDateImageHash := splits2[0] + "@" + upToDateHash
-
-			currentImageHash := GetCurrentImageHash(item.Spec.Template.Spec, splits1[0], splits1[1])
 
 			// logger.Logger.Infof("type: %s, name: %s, image: %s, image@hash: %s, current image@hash: %s", splits1[0], splits1[1], v, upToDateImageHash, currentImageHash)
 
@@ -81,11 +83,11 @@ func ReconcileDaemonSetRun(clientSet kubernetes.Interface) {
 				logger.Logger.Debug(patchOp)
 				patchOpBytes, err := json.Marshal([]PatchOperation{patchOp})
 				if err != nil {
-					logger.Logger.Panicw("error masharling patch op", "patchOp", patchOp, "patchOp", patchOp, "err", err)
+					logger.Logger.Infow("error masharling patch op", "patchOp", patchOp, "patchOp", patchOp, "err", err)
 				}
 				_, err = clientSet.AppsV1().DaemonSets(item.Namespace).Patch(context.TODO(), item.Name, types.JSONPatchType, patchOpBytes, metav1.PatchOptions{})
 				if err != nil {
-					logger.Logger.Panicw("error patching", "patchOp", patchOp, "err", err)
+					logger.Logger.Infow("error patching", "patchOp", patchOp, "err", err)
 				}
 			}
 		}

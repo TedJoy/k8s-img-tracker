@@ -33,7 +33,7 @@ func tryGetHash(image string) (string, error) {
 			logger.Logger.Debug(err)
 			return "", SkopeoUnauthorizedError{}
 		}
-		logger.Logger.Panicf("error: %v", err)
+		logger.Logger.Infof("error: %v", err)
 		return "", err
 	}
 
@@ -90,22 +90,22 @@ func GetImgDigest(image string, hm map[string]string) string {
 						err = loginECR(k, v.Metadata["aws_access_key_id"], v.Metadata["aws_secret_access_key"], v.Metadata["aws_default_region"])
 
 						if err != nil {
-							logger.Logger.Panicw("Error when authenticating to ECR", "err object", err)
+							logger.Logger.Infow("Error when authenticating to ECR", "err object", err)
 						}
 
 						hash, err = tryGetHash(image)
 
 						if err != nil {
-							logger.Logger.Panicw("Error even after authenticated", "err object", err)
+							logger.Logger.Infow("Error even after authenticated", "err object", err)
 						}
 					default:
-						logger.Logger.Panicw("Unsupported registry type", "type", v.Type)
+						logger.Logger.Infow("Unsupported registry type", "type", v.Type)
 					}
 					break
 				}
 			}
 		default:
-			logger.Logger.Panicw("Error", "err object", err)
+			logger.Logger.Infow("Error", "err object", err)
 		}
 	}
 
